@@ -5,9 +5,10 @@
 class Cell
 {
 private:
-	bool m_alive{ false };
 	sf::RectangleShape m_shape{ {Settings::cellSize, Settings::cellSize} };
 
+	bool m_alive{ false };
+	int m_neighbours{ 0 };
 
 public:
 	Cell(sf::Vector2f pos)
@@ -29,5 +30,8 @@ public:
 		m_alive = b;
 		m_shape.setFillColor(m_alive ? Settings::aliveColor : Settings::deadColor);
 	}
+
+	int getNeighbours() const { return m_neighbours; }
+	void addNeighbours() { m_neighbours++; }
 
 };

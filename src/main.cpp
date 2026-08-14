@@ -19,6 +19,8 @@ int main()
 
 	while (window.isOpen())
 	{
+		
+		//input
 		while (const auto event = window.pollEvent())
 		{
 			ImGui::SFML::ProcessEvent(window, *event);
@@ -30,20 +32,17 @@ int main()
 			if (const auto* mouseButtonPressed = event->getIf<sf::Event::MouseButtonPressed>())
 			{
 				auto mPos = mouseButtonPressed->position;
+				std::cout << '\n';
+				std::cout << "Raw Mouse Position: " << mPos.x << ", " << mPos.y << '\n';
+				std::cout << "Grid: " << mPos.x / Settings::cellSize << ", " << mPos.y / Settings::cellSize << '\n';
 
-				if (mouseButtonPressed->button == sf::Mouse::Button::Left)
-					std::cout << "Left ";
-				else
-					std::cout << "Right ";
-				std::cout << "Mouse button pressed event\n";
-				std::cout << "Position: " << mPos.x / Settings::cellSize << ", " << mPos.y / Settings::cellSize << '\n';
-
-				board.handleClick(mPos / Settings::cellSize, mouseButtonPressed->button == sf::Mouse::Button::Left);
+				board.setCell(mPos / Settings::cellSize, mouseButtonPressed->button == sf::Mouse::Button::Left);
 			}
 		}
 
 		ImGui::SFML::Update(window, clock.restart());
 
+		//rendering
 		window.clear();
 
 		board.draw();
