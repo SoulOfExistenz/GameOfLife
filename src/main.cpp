@@ -9,7 +9,8 @@ int main()
 {
 	sf::RenderWindow window(sf::VideoMode({ Settings::WINDOW_SIZE, Settings::WINDOW_SIZE }), "Game Of Life");
 	sf::Clock clock;
-
+	float time{};
+	bool isPlay{ false };
 	Board board{ window };
 
 	if (ImGui::SFML::Init(window))
@@ -19,7 +20,14 @@ int main()
 
 	while (window.isOpen())
 	{
-		
+		time += clock.getElapsedTime().asSeconds();
+
+		if (time > Settings::tick && isPlay)
+		{
+			board.nextGen();
+			time -= Settings::tick;
+		}
+
 		//input
 		while (const auto event = window.pollEvent())
 		{
@@ -38,6 +46,17 @@ int main()
 
 				board.setCell(mPos / Settings::cellSize, mouseButtonPressed->button == sf::Mouse::Button::Left);
 			}
+
+			if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
+			{
+				if (keyPressed->scancode == sf::Keyboard::Scan::Space)
+				{
+					isPlay = !isPlay;
+					time = 0;
+					std::cout << (isPlay ? "Playing" : "Paused");
+				}
+			}
+
 		}
 
 		ImGui::SFML::Update(window, clock.restart());
@@ -53,11 +72,3 @@ int main()
 	}
 	ImGui::SFML::Shutdown();
 }
-
-
-//RULES//
-
-//SURVIVAL: Any live cell with 2 or 3 live neighbours survives.
-//REPRODUCTION:  Any dead cell with exactly 3 live neighbors becomes a live cell.
-//OVERPOPULATION: Any live cell with more than 3 live neighbours dies.
-//UNDERPOPULATION: Any live cell with fewer than 2 live neighbours dies.

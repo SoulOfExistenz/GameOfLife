@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "Settings.h"
+#include <iostream>
 
 class Cell
 {
@@ -17,7 +18,8 @@ public:
 		m_shape.setPosition(pos);
 		m_shape.setOrigin(m_shape.getGeometricCenter());
 		m_shape.setOutlineColor(Settings::outlineColor);
-		m_shape.setOutlineThickness(2);
+		m_shape.setOutlineThickness(1.f);
+		std::cout << "pos: " << pos.x << ", " << pos.y << '\n';
 	}
 
 	void draw(sf::RenderWindow& window)
@@ -25,13 +27,15 @@ public:
 		window.draw(m_shape);
 	}
 
-	void setAlive(bool b)
+	void setState(bool b)
 	{
 		m_alive = b;
 		m_shape.setFillColor(m_alive ? Settings::aliveColor : Settings::deadColor);
 	}
-
-	int getNeighbours() const { return m_neighbours; }
 	void addNeighbours() { m_neighbours++; }
+	void decreaseNeighbours() { if (m_neighbours > 0) { m_neighbours--; } }
 
+	bool getState() const { return m_alive; }
+	int getNeighbours() const { return m_neighbours; }
+	sf::Vector2i getPos() { return sf::Vector2i{ m_shape.getPosition() }; }
 };
