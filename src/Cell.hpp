@@ -18,8 +18,7 @@ public:
 		m_shape.setPosition(pos);
 		m_shape.setOrigin(m_shape.getGeometricCenter());
 		m_shape.setOutlineColor(Settings::outlineColor);
-		m_shape.setOutlineThickness(1.f);
-		std::cout << "pos: " << pos.x << ", " << pos.y << '\n';
+		m_shape.setOutlineThickness(0);
 	}
 
 	void draw(sf::RenderWindow& window)

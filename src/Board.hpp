@@ -1,5 +1,6 @@
 #pragma once
 #include "Cell.hpp"
+#include "Random.h"
 #include <iostream>
 #include <vector>
 #include <SFML/Graphics.hpp>
@@ -33,6 +34,16 @@ public:
 				float xPos{ cellSize / 2 + (row * cellSize) };
 				m_board.emplace_back(sf::Vector2f{ xPos, yPos });
 			}
+		}
+		randomizeGrid();
+	}
+
+	void randomizeGrid()
+	{
+		for (auto i{ 0 }; i < std::size(m_board) * 0.5f; i++)
+		{
+			auto cell = m_board[Random::get<size_t>(0, std::size(m_board) - 1)];
+			setCell(cell.getPos() / Settings::cellSize, true);
 		}
 	}
 
@@ -78,11 +89,10 @@ public:
 	{
 		//get index
 		auto index = gridToIndex(gridPos);
-		std::cout << "Index: " << index << '\n';
 		auto& cell = m_board[index];
 
 
-		std::cout << "Neighbours: " << cell.getNeighbours() << '\n';
+		//std::cout << "Neighbours: " << cell.getNeighbours() << '\n';
 
 		if (cell.getState() == state)
 		{
@@ -144,13 +154,13 @@ public:
 		}
 
 		//Helper
-		std::cout << "leftIndex: " << leftIndex << '\n';
-		std::cout << "rightIndex: " << rightIndex << '\n';
-		std::cout << "upIndex: " << upIndex << '\n';
-		std::cout << "downIndex: " << downIndex << '\n';
-		std::cout << "upRight: " << upIndex - (index - rightIndex) << '\n';
-		std::cout << "upLeft: " << upIndex - (index - leftIndex) << '\n';
-		std::cout << "bottomRight: " << downIndex - (index - rightIndex) << '\n';
-		std::cout << "bottomLeft: " << downIndex - (index - leftIndex) << '\n';
+		//std::cout << "leftIndex: " << leftIndex << '\n';
+		//std::cout << "rightIndex: " << rightIndex << '\n';
+		//std::cout << "upIndex: " << upIndex << '\n';
+		//std::cout << "downIndex: " << downIndex << '\n';
+		//std::cout << "upRight: " << upIndex - (index - rightIndex) << '\n';
+		//std::cout << "upLeft: " << upIndex - (index - leftIndex) << '\n';
+		//std::cout << "bottomRight: " << downIndex - (index - rightIndex) << '\n';
+		//std::cout << "bottomLeft: " << downIndex - (index - leftIndex) << '\n';
 	}
 };
