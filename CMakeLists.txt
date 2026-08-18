@@ -20,6 +20,8 @@ FetchContent_Declare(
     SYSTEM
 )
 
+set(SFML_BUILD_NETWORK OFF)
+
 FetchContent_MakeAvailable(SFML)
 
 

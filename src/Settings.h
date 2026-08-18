@@ -3,10 +3,12 @@
 
 namespace Settings
 {
-	constexpr int WINDOW_SIZE{ 800 };
 	constexpr int cellAmount{ 50 };
-	constexpr int cellSize{ WINDOW_SIZE / cellAmount };
-	constexpr float tick{ 0.5f };
+	constexpr int cellSize{ 5 };
+	constexpr int WINDOW_SIZE{ cellAmount * cellSize };
+
+	inline float tick{ 0.1f };
+	inline float randomizeAmount{ 0.25f };
 
 	constexpr sf::Color aliveColor{ sf::Color::Red };
 	constexpr sf::Color deadColor{ sf::Color::Black };

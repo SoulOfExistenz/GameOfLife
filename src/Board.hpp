@@ -9,9 +9,11 @@ class Board
 {
 private:
 	std::vector<Cell> m_board;
-	std::vector<Cell> m_tempBoard;
+	std::vector<Cell> m_nextBoard;
 
+	std::vector<Cell>* m_currentBoard{ &m_board };
 
+	int m_generationCount{ 0 };
 	sf::RenderWindow& m_window;
 
 	size_t gridToIndex(sf::Vector2i pos)
@@ -35,15 +37,36 @@ public:
 				m_board.emplace_back(sf::Vector2f{ xPos, yPos });
 			}
 		}
-		randomizeGrid();
+	}
+
+	int getGeneration() const { return m_generationCount; }
+
+	void clear()
+	{
+		for (auto e : m_board)
+		{
+			if(e.getState())
+			setCell(e.getGridPos(), false);
+		}
+		m_generationCount = 0;
 	}
 
 	void randomizeGrid()
 	{
-		for (auto i{ 0 }; i < std::size(m_board) * 0.5f; i++)
+		clear();
+		for (auto i{ 0 }; i < std::size(m_board) * Settings::randomizeAmount; i++)
 		{
-			auto cell = m_board[Random::get<size_t>(0, std::size(m_board) - 1)];
-			setCell(cell.getPos() / Settings::cellSize, true);
+			do
+			{
+				auto cell = m_board[Random::get<size_t>(0, std::size(m_board) - 1)];
+
+				if (cell.getState())
+					continue;
+
+				setCell(cell.getGridPos(), true);
+				break;
+
+			} while (true);
 		}
 	}
 
@@ -55,32 +78,29 @@ public:
 
 	void nextGen()
 	{
-		//loop through each cell
-		//copy current board to temp
-		m_tempBoard = m_board;
-		//loop through tempBoard and make changes to board
-		for (auto i{0}; i < std::size(m_tempBoard); i++)
+		m_nextBoard = m_board;
+		m_generationCount++;
+		//loop through the tempBoard and make changes to board
+		for (auto i{0}; i < std::size(m_nextBoard); i++)
 		{
-			auto tempCell = m_tempBoard[i];
+			auto tempCell = m_nextBoard[i];
 
 			//if cell is dead and has 3 live neighbours it becomes alive
 			if (!tempCell.getState() && tempCell.getNeighbours() == 3)
 			{
-				setCell(tempCell.getPos() / Settings::cellSize, true);
+				setCell(tempCell.getGridPos(), true);
 				continue;
 			}
 
-			//if cell is alive and has less than 2 live neighbours it dies
-			if (tempCell.getState() && tempCell.getNeighbours() < 2)
+			//If cell is alive
+			if (tempCell.getState())
 			{
-				setCell(tempCell.getPos() / Settings::cellSize, false);
-				continue;
-			}
-			//if cell is alive and has more than 3 live neighbours it dies
-			if (tempCell.getState() && tempCell.getNeighbours() > 3)
-			{
-				setCell(tempCell.getPos() / Settings::cellSize, false);
-				continue;
+				//If cell has less than 2 or more than 3 neighbours it dies
+				if (tempCell.getNeighbours() < 2 || tempCell.getNeighbours() > 3)
+				{
+					setCell(tempCell.getGridPos(), false);
+					continue;
+				}
 			}
 		}
 	}
@@ -89,17 +109,24 @@ public:
 	{
 		//get index
 		auto index = gridToIndex(gridPos);
-		auto& cell = m_board[index];
 
-
-		//std::cout << "Neighbours: " << cell.getNeighbours() << '\n';
-
-		if (cell.getState() == state)
+		if (index > m_board.size() - 1)
 		{
-			std::cout << "This is already set as you want it to be...\n";
+			std::cout << "Too big\n";
 			return;
 		}
 
+		auto& cell = m_board[index];
+
+
+		if (cell.getState() == state)
+		{
+			//std::cout << "This is already set as you want it to be...\n";
+			return;
+		}
+
+		//std::cout << "Neighbours: " << cell.getNeighbours() << '\n';
+		
 		//effect cell
 		cell.setState(state);
 

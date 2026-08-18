@@ -17,8 +17,8 @@ public:
 		m_shape.setFillColor(m_alive ? Settings::aliveColor : Settings::deadColor);
 		m_shape.setPosition(pos);
 		m_shape.setOrigin(m_shape.getGeometricCenter());
-		m_shape.setOutlineColor(Settings::outlineColor);
-		m_shape.setOutlineThickness(0);
+		//m_shape.setOutlineColor(Settings::outlineColor);
+		//m_shape.setOutlineThickness(0.7f);
 	}
 
 	void draw(sf::RenderWindow& window)
@@ -36,5 +36,5 @@ public:
 
 	bool getState() const { return m_alive; }
 	int getNeighbours() const { return m_neighbours; }
-	sf::Vector2i getPos() { return sf::Vector2i{ m_shape.getPosition() }; }
+	sf::Vector2i getGridPos() { return sf::Vector2i{ m_shape.getPosition() } / Settings::cellSize; }
 };
