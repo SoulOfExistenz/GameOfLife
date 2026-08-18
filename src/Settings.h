@@ -3,7 +3,7 @@
 
 namespace Settings
 {
-	constexpr int cellAmount{ 50 };
+	constexpr int cellAmount{ 100 };
 	constexpr int cellSize{ 5 };
 	constexpr int WINDOW_SIZE{ cellAmount * cellSize };
 

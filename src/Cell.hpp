@@ -36,5 +36,5 @@ public:
 
 	bool getState() const { return m_alive; }
 	int getNeighbours() const { return m_neighbours; }
-	sf::Vector2i getGridPos() { return sf::Vector2i{ m_shape.getPosition() } / Settings::cellSize; }
+	const sf::Vector2i getGridPos() const { return sf::Vector2i{ m_shape.getPosition() } / Settings::cellSize; }
 };

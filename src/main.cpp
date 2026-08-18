@@ -104,11 +104,11 @@ int main()
 
 		if (isLeftMouseHeld)
 		{
-			board.setCell(mPos, true);
+			board.setCell(mPos, true, true);
 		}
 		else if (isRightMouseHeld)
 		{
-			board.setCell(mPos, false);
+			board.setCell(mPos, false, true);
 		} 
 
 		ImGui::SFML::Update(window, clock.restart());

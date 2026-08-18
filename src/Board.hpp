@@ -4,14 +4,16 @@
 #include <iostream>
 #include <vector>
 #include <SFML/Graphics.hpp>
+#include <utility>
 
 class Board
 {
 private:
-	std::vector<Cell> m_board;
-	std::vector<Cell> m_nextBoard;
+	std::vector<Cell> m_boardA;
+	std::vector<Cell> m_boardB;
 
-	std::vector<Cell>* m_currentBoard{ &m_board };
+	std::vector<Cell>* m_currentBoard{ &m_boardA };
+	std::vector<Cell>* m_nextBoard{ &m_boardB };
 
 	int m_generationCount{ 0 };
 	sf::RenderWindow& m_window;
@@ -34,7 +36,8 @@ public:
 			for (float row{ 0 }; row < cellAmount; row++)
 			{
 				float xPos{ cellSize / 2 + (row * cellSize) };
-				m_board.emplace_back(sf::Vector2f{ xPos, yPos });
+				m_boardA.emplace_back(sf::Vector2f{ xPos, yPos });
+				m_boardB.emplace_back(sf::Vector2f{ xPos, yPos });
 			}
 		}
 	}
@@ -43,10 +46,12 @@ public:
 
 	void clear()
 	{
-		for (auto e : m_board)
+		for (auto& e : *m_currentBoard)
 		{
-			if(e.getState())
-			setCell(e.getGridPos(), false);
+			if (e.getState())
+			{
+				setCell(e.getGridPos(), false, true);
+			}
 		}
 		m_generationCount = 0;
 	}
@@ -54,16 +59,16 @@ public:
 	void randomizeGrid()
 	{
 		clear();
-		for (auto i{ 0 }; i < std::size(m_board) * Settings::randomizeAmount; i++)
+		for (auto i{ 0 }; i < std::size(m_boardA) * Settings::randomizeAmount; i++)
 		{
 			do
 			{
-				auto cell = m_board[Random::get<size_t>(0, std::size(m_board) - 1)];
+				const auto& cell = m_currentBoard->at(Random::get<size_t>(0, std::size(m_boardA) - 1));
 
 				if (cell.getState())
 					continue;
 
-				setCell(cell.getGridPos(), true);
+				setCell(cell.getGridPos(), true, true);
 				break;
 
 			} while (true);
@@ -72,52 +77,65 @@ public:
 
 	void draw()
 	{
-		for (auto& e : m_board)
+		for (auto& e : *m_currentBoard)
 			e.draw(m_window);
 	}
 
+
 	void nextGen()
 	{
-		m_nextBoard = m_board;
 		m_generationCount++;
-		//loop through the tempBoard and make changes to board
-		for (auto i{0}; i < std::size(m_nextBoard); i++)
+
+		// make changes to the next board based on the state of the current board
+		for (auto i{ 0 }; i < std::size(*m_currentBoard); i++)
 		{
-			auto tempCell = m_nextBoard[i];
+			auto& curCell = m_currentBoard->at(i);
 
 			//if cell is dead and has 3 live neighbours it becomes alive
-			if (!tempCell.getState() && tempCell.getNeighbours() == 3)
+			if (!curCell.getState())
 			{
-				setCell(tempCell.getGridPos(), true);
-				continue;
+				if(m_nextBoard->at(i).getState())
+				setCell(curCell.getGridPos(), false);
+
+				if (curCell.getNeighbours() == 3)
+				{
+					setCell(curCell.getGridPos(), true);
+					continue;
+				}
 			}
 
 			//If cell is alive
-			if (tempCell.getState())
+			if (curCell.getState())
 			{
+				if(!m_nextBoard->at(i).getState())
+				setCell(curCell.getGridPos(), true);
+
 				//If cell has less than 2 or more than 3 neighbours it dies
-				if (tempCell.getNeighbours() < 2 || tempCell.getNeighbours() > 3)
+				if (curCell.getNeighbours() < 2 || curCell.getNeighbours() > 3)
 				{
-					setCell(tempCell.getGridPos(), false);
+					setCell(curCell.getGridPos(), false);
 					continue;
 				}
 			}
 		}
+
+		//swap boards
+		std::swap(m_currentBoard, m_nextBoard);
 	}
 
-	void setCell(const sf::Vector2i gridPos, bool state)
+	void setCell(const sf::Vector2i gridPos, bool state, bool currentBoard = false)
 	{
 		//get index
 		auto index = gridToIndex(gridPos);
 
-		if (index > m_board.size() - 1)
+		if (index > std::size(m_boardA) - 1)
 		{
 			std::cout << "Too big\n";
 			return;
 		}
 
-		auto& cell = m_board[index];
-
+		auto board = (currentBoard ? m_currentBoard : m_nextBoard);
+		auto& cell = board->at(index);
 
 		if (cell.getState() == state)
 		{
@@ -130,7 +148,7 @@ public:
 		//effect cell
 		cell.setState(state);
 
-		//effect neighbours
+		//get neighbour indices
 		size_t leftIndex{ index - 1 };
 		size_t rightIndex{ index + 1 };
 		size_t upIndex{ index - Settings::cellAmount };
@@ -149,35 +167,36 @@ public:
 		if (gridPos.y == Settings::cellAmount - 1)
 			downIndex = index - (Settings::cellAmount - 1 ) * (Settings::cellAmount);
 
+		//effect neighbours
 		if (state)
 		{
-			m_board[leftIndex].addNeighbours();
-			m_board[rightIndex].addNeighbours();
-			m_board[upIndex].addNeighbours();
-			m_board[downIndex].addNeighbours();
+			board->at(leftIndex).addNeighbours();
+			board->at(rightIndex).addNeighbours();
+			board->at(upIndex).addNeighbours();
+			board->at(downIndex).addNeighbours();
 			//upRight
-			m_board[upIndex - (index - rightIndex)].addNeighbours();
+			board->at(upIndex - (index - rightIndex)).addNeighbours();
 			//upLeft
-			m_board[upIndex - (index - leftIndex)].addNeighbours();
+			board->at(upIndex - (index - leftIndex)).addNeighbours();
 			//downRight
-			m_board[downIndex - (index - rightIndex)].addNeighbours();
+			board->at(downIndex - (index - rightIndex)).addNeighbours();
 			//downLeft
-			m_board[downIndex - (index - leftIndex)].addNeighbours();
+			board->at(downIndex - (index - leftIndex)).addNeighbours();
 		}
 		else
 		{
-			m_board[leftIndex].decreaseNeighbours();
-			m_board[rightIndex].decreaseNeighbours();
-			m_board[upIndex].decreaseNeighbours();
-			m_board[downIndex].decreaseNeighbours();
+			board->at(leftIndex).decreaseNeighbours();
+			board->at(rightIndex).decreaseNeighbours();
+			board->at(upIndex).decreaseNeighbours();
+			board->at(downIndex).decreaseNeighbours();
 			//upRight
-			m_board[upIndex - (index - rightIndex)].decreaseNeighbours();
+			board->at(upIndex - (index - rightIndex)).decreaseNeighbours();
 			//upLeft
-			m_board[upIndex - (index - leftIndex)].decreaseNeighbours();
+			board->at(upIndex - (index - leftIndex)).decreaseNeighbours();
 			//downRight
-			m_board[downIndex - (index - rightIndex)].decreaseNeighbours();
+			board->at(downIndex - (index - rightIndex)).decreaseNeighbours();
 			//downLeft
-			m_board[downIndex - (index - leftIndex)].decreaseNeighbours();
+			board->at(downIndex - (index - leftIndex)).decreaseNeighbours();
 		}
 
 		//Helper
