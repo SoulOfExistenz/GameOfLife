@@ -1,9 +1,10 @@
 #pragma once
 #include "Cell.hpp"
 #include "Random.h"
+#include "Settings.h"
+#include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
-#include <SFML/Graphics.hpp>
 #include <utility>
 
 class Board
@@ -15,6 +16,9 @@ private:
 	std::vector<Cell>* m_currentBoard{ &m_boardA };
 	std::vector<Cell>* m_nextBoard{ &m_boardB };
 
+	sf::VertexArray m_gridVertices;
+	sf::VertexArray m_cellVertices;
+
 	int m_generationCount{ 0 };
 	sf::RenderWindow& m_window;
 
@@ -24,21 +28,48 @@ private:
 	}
 
 public:
-	Board(sf::RenderWindow& window) : m_window(window)
+	Board(sf::RenderWindow& window) : m_window(window), m_gridVertices(sf::PrimitiveType::Lines), m_cellVertices(sf::PrimitiveType::Triangles)
 	{
-		auto cellSize = Settings::cellSize;
-		auto cellAmount = Settings::cellAmount;
+		float cellSize = Settings::cellSize;
+		float cellAmount = Settings::cellAmount;
+		
+		//init grid
+		for (auto i{ 0 }; i < (cellAmount - 1); i++)
+		{
+			//horizontal lines
+			m_gridVertices.append(sf::Vertex(sf::Vector2f{ 0.0f,				  (i + 1) * cellSize }));
+			m_gridVertices.append(sf::Vertex(sf::Vector2f{ cellAmount * cellSize, (i + 1) * cellSize}));
+			//vertical lines
+			m_gridVertices.append(sf::Vertex(sf::Vector2f{ (i + 1) * cellSize, 0.0f }));
+			m_gridVertices.append(sf::Vertex(sf::Vector2f{ (i + 1) * cellSize, cellAmount * cellSize }));
+		}
+
 		//Init board
 		for (float column{ 0 }; column < cellAmount; column++)
 		{
-			float yPos{ cellSize / 2 + (column * cellSize) };
+			float yPos{column * cellSize };
 
 			for (float row{ 0 }; row < cellAmount; row++)
 			{
-				float xPos{ cellSize / 2 + (row * cellSize) };
+				float xPos{ row * cellSize };
 				m_boardA.emplace_back(sf::Vector2f{ xPos, yPos });
 				m_boardB.emplace_back(sf::Vector2f{ xPos, yPos });
 			}
+		}
+
+		//Init Cell Vertices
+		for (auto i{ 0 }; i < std::size(m_boardA); i++)
+		{
+			sf::Vector2f pos = static_cast<sf::Vector2f>(m_boardA[i].getPos());
+			auto color = sf::Color::Black;
+			
+			m_cellVertices.append(sf::Vertex(sf::Vector2f{ pos.x, pos.y }, color)); // top left
+			m_cellVertices.append(sf::Vertex(sf::Vector2f{ pos.x + cellSize, pos.y }, color)); // top right
+			m_cellVertices.append(sf::Vertex(sf::Vector2f{ pos.x, pos.y + cellSize }, color)); // bottom left
+
+			m_cellVertices.append(sf::Vertex(sf::Vector2f{ pos.x + cellSize, pos.y + cellSize }, color)); // bottom right
+			m_cellVertices.append(sf::Vertex(sf::Vector2f{ pos.x, pos.y + cellSize }, color)); // bottom left
+			m_cellVertices.append(sf::Vertex(sf::Vector2f{ pos.x + cellSize, pos.y }, color)); // top right
 		}
 	}
 
@@ -75,12 +106,15 @@ public:
 		}
 	}
 
-	void draw()
+	void drawGrid()
 	{
-		for (auto& e : *m_currentBoard)
-			e.draw(m_window);
+		m_window.draw(m_gridVertices);
 	}
 
+	void drawCellsVertices()
+	{
+		m_window.draw(m_cellVertices);
+	}
 
 	void nextGen()
 	{
@@ -134,7 +168,7 @@ public:
 			return;
 		}
 
-		auto board = (currentBoard ? m_currentBoard : m_nextBoard);
+		auto& board = (currentBoard ? m_currentBoard : m_nextBoard);
 		auto& cell = board->at(index);
 
 		if (cell.getState() == state)
@@ -144,9 +178,15 @@ public:
 		}
 
 		//std::cout << "Neighbours: " << cell.getNeighbours() << '\n';
-		
+		//std::cout << "Index: " << index;
 		//effect cell
 		cell.setState(state);
+
+		//effect vertices
+		for (auto i{ 0 }; i < 6; i++)
+		{
+			m_cellVertices[index * 6 + i].color = state ? Settings::aliveColor : Settings::deadColor;
+		}
 
 		//get neighbour indices
 		size_t leftIndex{ index - 1 };

@@ -10,15 +10,16 @@ int main()
 {
 	sf::RenderWindow window(sf::VideoMode({ Settings::WINDOW_SIZE, Settings::WINDOW_SIZE }), "Game Of Life");
 
+	Board board{ window };
+
 	sf::Clock clock;
 	float time{};
 	bool isPlay{ false };
-
+	bool isDrawGrid{ false };
 	bool isLeftMouseHeld{ false };
 	bool isRightMouseHeld{ false };
 	sf::Vector2i mPos;
 	
-	Board board{ window };
 
 	if (ImGui::SFML::Init(window))
 		std::cout << "ImGui init success\n";
@@ -45,8 +46,10 @@ int main()
 
 			//Mouse Moved
 			if (const auto* mouseMoved = event->getIf<sf::Event::MouseMoved>())
-				mPos = (mouseMoved->position - sf::Vector2i{ 2, 2 }) / Settings::cellSize;
-
+			{
+				mPos = mouseMoved->position / Settings::cellSize;
+			}
+			
 			//Mouse Pressed
 			if (const auto* mouseButtonPressed = event->getIf<sf::Event::MouseButtonPressed>())
 			{
@@ -99,6 +102,9 @@ int main()
 				{
 					board.clear();
 				}
+
+				if (keyPressed->scancode == sf::Keyboard::Scan::G)
+					isDrawGrid = !isDrawGrid;
 			}
 		}
 
@@ -117,24 +123,28 @@ int main()
 		ImGui::Begin("Game of Life");
 		ImGui::Text("Generation Count: %d", board.getGeneration());
 		ImGui::Text("ScreenSize: %d", window.getSize().x);
-		ImGui::SliderFloat("Ticks", &Settings::tick, 0.f, 1.f);
 		if (ImGui::Button("Start/Pause"))
 		{
 			isPlay = !isPlay;
 			time = 0;
 			std::cout << (isPlay ? "Playing" : "Paused") << '\n';
 		}
-
-		ImGui::SliderFloat("Amount", &Settings::randomizeAmount, 0.f, 1.f);
+		ImGui::SameLine();
+		ImGui::SliderFloat("Ticks", &Settings::tick, 0.f, 1.f);
 		if (ImGui::Button("Randomize"))
 			board.randomizeGrid();
+		ImGui::SameLine();
+		ImGui::SliderFloat("Amount", &Settings::randomizeAmount, 0.f, 1.f);
 		ImGui::End();
 		
 
 		//rendering
 		window.clear();
 
-		board.draw();
+		board.drawCellsVertices();
+
+		if(isDrawGrid)
+		board.drawGrid();
 
 		ImGui::SFML::Render(window);
 
