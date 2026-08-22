@@ -3,8 +3,8 @@
 
 namespace Settings
 {
-	constexpr int cellAmount{ 30 };
-	constexpr int cellSize{ 20 };
+	constexpr int cellAmount{ 100 };
+	constexpr int cellSize{ 5 };
 	constexpr int WINDOW_SIZE{ cellAmount * cellSize };
 
 	inline float tick{ 0.1f };

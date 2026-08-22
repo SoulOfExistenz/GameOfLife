@@ -1,7 +1,6 @@
 #pragma once
 #include "Settings.h"
 #include <SFML/Graphics.hpp>
-#include <iostream>
 
 class Cell
 {

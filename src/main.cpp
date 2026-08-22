@@ -2,9 +2,8 @@
 #include <imgui-SFML.h>
 #include <SFML/Graphics.hpp>
 #include <iostream>
-#include <string>
 #include "Settings.h"
-#include "Board.hpp"
+#include "Board.h"
 
 int main()
 {
@@ -13,9 +12,6 @@ int main()
 	Board board{ window };
 
 	sf::Clock clock;
-	float time{};
-	bool isPlay{ false };
-	bool isDrawGrid{ false };
 	bool isLeftMouseHeld{ false };
 	bool isRightMouseHeld{ false };
 	sf::Vector2i mPos;
@@ -28,15 +24,26 @@ int main()
 
 	while (window.isOpen())
 	{
-		time += clock.getElapsedTime().asSeconds();
-		//tick system
-		if (time > Settings::tick && isPlay)
-		{
-			board.nextGen();
-			time -= Settings::tick;
-		}
 
-		//input
+		//IMGUI
+		ImGui::SFML::Update(window, clock.restart());
+		ImGui::Begin("Game of Life");
+		ImGui::Text("Generation Count: %d", board.getGeneration());
+		ImGui::Text("Cell Count: %d", Settings::cellAmount * Settings::cellAmount);
+		ImGui::Text("ScreenSize: %d", window.getSize().x);
+		if (ImGui::Button("Start/Pause"))
+		{
+			board.togglePause();
+		}
+		ImGui::SameLine();
+		ImGui::SliderFloat("Ticks", &Settings::tick, 0.f, 1.f);
+		if (ImGui::Button("Randomize"))
+			board.randomizeGrid();
+		ImGui::SameLine();
+		ImGui::SliderFloat("Amount", &Settings::randomizeAmount, 0.f, 1.f);
+		ImGui::End();
+
+		//INPUT
 		while (const auto event = window.pollEvent())
 		{
 			ImGui::SFML::ProcessEvent(window, *event);
@@ -47,7 +54,9 @@ int main()
 			//Mouse Moved
 			if (const auto* mouseMoved = event->getIf<sf::Event::MouseMoved>())
 			{
-				mPos = mouseMoved->position / Settings::cellSize;
+				//mPos = mouseMoved->position / Settings::cellSize;
+				auto mappedMouse = window.mapPixelToCoords(mouseMoved->position);
+				mPos = static_cast<sf::Vector2i>(mappedMouse) / Settings::cellSize;
 			}
 			
 			//Mouse Pressed
@@ -88,26 +97,21 @@ int main()
 			{
 				if (keyPressed->scancode == sf::Keyboard::Scan::Space)
 				{
-					isPlay = !isPlay;
-					time = 0;
-					std::cout << (isPlay ? "Playing" : "Paused") << '\n';
+					board.togglePause();
 				}
 
-				if (keyPressed->scancode == sf::Keyboard::Scan::R)
-				{
+				if (keyPressed->scancode == sf::Keyboard::Scan::R) 
 					board.randomizeGrid();
-				}
 
 				if (keyPressed->scancode == sf::Keyboard::Scan::C)
-				{
 					board.clear();
-				}
 
 				if (keyPressed->scancode == sf::Keyboard::Scan::G)
-					isDrawGrid = !isDrawGrid;
+					board.toggleGrid();
 			}
 		}
-
+		
+		//UPDATE
 		if (isLeftMouseHeld)
 		{
 			board.setCell(mPos, true, true);
@@ -117,33 +121,14 @@ int main()
 			board.setCell(mPos, false, true);
 		} 
 
-		ImGui::SFML::Update(window, clock.restart());
 
-		//imgui items---
-		ImGui::Begin("Game of Life");
-		ImGui::Text("Generation Count: %d", board.getGeneration());
-		ImGui::Text("ScreenSize: %d", window.getSize().x);
-		if (ImGui::Button("Start/Pause"))
-		{
-			isPlay = !isPlay;
-			time = 0;
-			std::cout << (isPlay ? "Playing" : "Paused") << '\n';
-		}
-		ImGui::SameLine();
-		ImGui::SliderFloat("Ticks", &Settings::tick, 0.f, 1.f);
-		if (ImGui::Button("Randomize"))
-			board.randomizeGrid();
-		ImGui::SameLine();
-		ImGui::SliderFloat("Amount", &Settings::randomizeAmount, 0.f, 1.f);
-		ImGui::End();
-		
+		board.update();
 
-		//rendering
+		//RENDERING
 		window.clear();
 
 		board.drawCellsVertices();
 
-		if(isDrawGrid)
 		board.drawGrid();
 
 		ImGui::SFML::Render(window);
