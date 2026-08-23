@@ -16,12 +16,13 @@ Board::Board(sf::RenderWindow& window) : m_window(window), m_gridVertices(sf::Pr
 	//init grid
 	for (auto i{ 0 }; i < (cellAmount - 1); i++)
 	{
+		auto color = Settings::gridColor;
 		//horizontal lines
-		m_gridVertices.append(sf::Vertex(sf::Vector2f{ 0.0f,				  (i + 1) * cellSize }));
-		m_gridVertices.append(sf::Vertex(sf::Vector2f{ cellAmount * cellSize, (i + 1) * cellSize }));
+		m_gridVertices.append(sf::Vertex(sf::Vector2f{ 0.0f,				  (i + 1) * cellSize }, color));
+		m_gridVertices.append(sf::Vertex(sf::Vector2f{ cellAmount * cellSize, (i + 1) * cellSize }, color));
 		//vertical lines
-		m_gridVertices.append(sf::Vertex(sf::Vector2f{ (i + 1) * cellSize, 0.0f }));
-		m_gridVertices.append(sf::Vertex(sf::Vector2f{ (i + 1) * cellSize, cellAmount * cellSize }));
+		m_gridVertices.append(sf::Vertex(sf::Vector2f{ (i + 1) * cellSize, 0.0f }, color));
+		m_gridVertices.append(sf::Vertex(sf::Vector2f{ (i + 1) * cellSize, cellAmount * cellSize }, color));
 	}
 
 	//Init board
@@ -41,7 +42,7 @@ Board::Board(sf::RenderWindow& window) : m_window(window), m_gridVertices(sf::Pr
 	for (auto i{ 0 }; i < std::size(m_boardA); i++)
 	{
 		sf::Vector2f pos = static_cast<sf::Vector2f>(m_boardA[i].getPos());
-		auto color = sf::Color::Black;
+		auto color = Settings::deadColor;
 
 		m_cellVertices.append(sf::Vertex(sf::Vector2f{ pos.x, pos.y }, color)); // top left
 		m_cellVertices.append(sf::Vertex(sf::Vector2f{ pos.x + cellSize, pos.y }, color)); // top right
@@ -138,6 +139,11 @@ void Board::nextGen()
 
 void Board::setCell(const sf::Vector2i gridPos, bool state, bool currentBoard)
 {
+	if (gridPos.x < 0 || gridPos.y < 0)
+		return;
+	if (gridPos.x > Settings::cellAmount || gridPos.y > Settings::cellAmount)
+		return;
+
 	//get index
 	auto index = gridToIndex(gridPos);
 	auto cellAmount = Settings::cellAmount;
@@ -162,7 +168,7 @@ void Board::setCell(const sf::Vector2i gridPos, bool state, bool currentBoard)
 	//effect cell
 	cell.setState(state);
 
-	//effect vertices
+	//color vertices
 	for (auto i{ 0 }; i < 6; i++)
 	{
 		m_cellVertices[index * 6 + i].color = state ? Settings::aliveColor : Settings::deadColor;
@@ -187,37 +193,19 @@ void Board::setCell(const sf::Vector2i gridPos, bool state, bool currentBoard)
 	if (gridPos.y == cellAmount - 1)
 		downIndex = index - (cellAmount - 1) * cellAmount;
 
-	//effect neighbours
-	if (state)
-	{
-		board->at(leftIndex).addNeighbours();
-		board->at(rightIndex).addNeighbours();
-		board->at(upIndex).addNeighbours();
-		board->at(downIndex).addNeighbours();
-		//upRight
-		board->at(upIndex - (index - rightIndex)).addNeighbours();
-		//upLeft
-		board->at(upIndex - (index - leftIndex)).addNeighbours();
-		//downRight
-		board->at(downIndex - (index - rightIndex)).addNeighbours();
-		//downLeft
-		board->at(downIndex - (index - leftIndex)).addNeighbours();
-	}
-	else
-	{
-		board->at(leftIndex).decreaseNeighbours();
-		board->at(rightIndex).decreaseNeighbours();
-		board->at(upIndex).decreaseNeighbours();
-		board->at(downIndex).decreaseNeighbours();
-		//upRight
-		board->at(upIndex - (index - rightIndex)).decreaseNeighbours();
-		//upLeft
-		board->at(upIndex - (index - leftIndex)).decreaseNeighbours();
-		//downRight
-		board->at(downIndex - (index - rightIndex)).decreaseNeighbours();
-		//downLeft
-		board->at(downIndex - (index - leftIndex)).decreaseNeighbours();
-	}
+	//effect neighbours neighbour count
+	board->at(leftIndex).updateNeighbourCount(state);
+	board->at(rightIndex).updateNeighbourCount(state);
+	board->at(upIndex).updateNeighbourCount(state);
+	board->at(downIndex).updateNeighbourCount(state);
+	//upRight
+	board->at(upIndex - (index - rightIndex)).updateNeighbourCount(state);
+	//upLeft
+	board->at(upIndex - (index - leftIndex)).updateNeighbourCount(state);
+	//downRight
+	board->at(downIndex - (index - rightIndex)).updateNeighbourCount(state);
+	//downLeft
+	board->at(downIndex - (index - leftIndex)).updateNeighbourCount(state);
 
 	//Helper
 	//std::cout << "leftIndex: " << leftIndex << '\n';

@@ -9,6 +9,9 @@ private:
 	bool m_alive{ false };
 	int m_neighbours{ 0 };
 
+	void addNeighbours() { m_neighbours++; }
+	void decreaseNeighbours() { if (m_neighbours > 0) { m_neighbours--; } }
+
 public:
 	Cell(sf::Vector2f pos) : m_pos{pos}
 	{
@@ -18,8 +21,14 @@ public:
 	{
 		m_alive = b;
 	}
-	void addNeighbours() { m_neighbours++; }
-	void decreaseNeighbours() { if (m_neighbours > 0) { m_neighbours--; } }
+
+	void updateNeighbourCount(bool increment)
+	{
+		if (increment)
+			addNeighbours();
+		else
+			decreaseNeighbours();
+	}
 
 	bool getState() const { return m_alive; }
 	int getNeighbours() const { return m_neighbours; }

@@ -27,6 +27,8 @@ private:
 
 	size_t gridToIndex(sf::Vector2i pos) { return (pos.y * Settings::cellAmount) + pos.x; }
 
+	void nextGen();
+
 public:
 	Board(sf::RenderWindow& window);
 
@@ -36,9 +38,11 @@ public:
 
 	void randomizeGrid();
 
-	void nextGen();
-
 	void setCell(const sf::Vector2i gridPos, bool state, bool currentBoard = false);
+
+	int getGeneration() const { return m_generationCount; }
+
+	void toggleGrid() { m_isDrawGrid = !m_isDrawGrid; }
 
 	void drawGrid()
 	{
@@ -57,9 +61,5 @@ public:
 		m_time = 0;
 		std::cout << (m_isPlay ? "Playing" : "Paused") << '\n';
 	}
-
-	void toggleGrid() { m_isDrawGrid = !m_isDrawGrid; }
-
-	int getGeneration() const { return m_generationCount; }
 
 };

@@ -8,10 +8,12 @@
 int main()
 {
 	sf::RenderWindow window(sf::VideoMode({ Settings::WINDOW_SIZE, Settings::WINDOW_SIZE }), "Game Of Life");
+	sf::View view{ {Settings::cellAmount * Settings::cellSize / 2, Settings::cellAmount * Settings::cellSize / 2  }, {Settings::cellSize * Settings::cellAmount, Settings::cellSize * Settings::cellAmount} };
 
 	Board board{ window };
 
 	sf::Clock clock;
+
 	bool isLeftMouseHeld{ false };
 	bool isRightMouseHeld{ false };
 	sf::Vector2i mPos;
@@ -30,7 +32,6 @@ int main()
 		ImGui::Begin("Game of Life");
 		ImGui::Text("Generation Count: %d", board.getGeneration());
 		ImGui::Text("Cell Count: %d", Settings::cellAmount * Settings::cellAmount);
-		ImGui::Text("ScreenSize: %d", window.getSize().x);
 		if (ImGui::Button("Start/Pause"))
 		{
 			board.togglePause();
@@ -51,6 +52,32 @@ int main()
 			if (event->is<sf::Event::Closed>())
 				window.close();
 
+			//Mouse Scroll
+			if (const auto* mouseScrolled = event->getIf<sf::Event::MouseWheelScrolled>())
+			{
+				auto scrollDelta = mouseScrolled->delta;
+				if (scrollDelta > 0)
+					view.zoom(0.9f);
+				else if (scrollDelta < 0)
+					view.zoom(1.1f);
+
+				if (view.getSize().x > Settings::cellAmount * Settings::cellSize)
+				{
+					view.setSize({ Settings::cellAmount * Settings::cellSize, Settings::cellAmount * Settings::cellSize });
+				}
+
+				if (view.getSize().x < Settings::cellSize * 2)
+				{
+					view.setSize({ Settings::cellSize * 2, Settings::cellSize * 2 });
+				}
+
+				//view.setCenter(window.mapPixelToCoords(mouseScrolled->position));
+
+				std::cout << "View: " << view.getSize().x << '\n';
+
+				window.setView(view);
+			}
+
 			//Mouse Moved
 			if (const auto* mouseMoved = event->getIf<sf::Event::MouseMoved>())
 			{
@@ -65,16 +92,20 @@ int main()
 				if (ImGui::GetIO().WantCaptureMouse)
 					continue;
 				
-				if(mouseButtonPressed->button == sf::Mouse::Button::Left)
+
+
+				if (mouseButtonPressed->button == sf::Mouse::Button::Left)
+				{
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LControl))
+					{
+						
+					}
+					else
 					isLeftMouseHeld = true;
+				}
 
 				if (mouseButtonPressed->button == sf::Mouse::Button::Right)
 					isRightMouseHeld = true;
-
-				auto pos = mouseButtonPressed->position;
-				std::cout << '\n';
-				std::cout << "Raw Mouse Position: " << pos.x << ", " << pos.y << '\n';
-				std::cout << "Grid: " << pos.x / Settings::cellSize << ", " << pos.y / Settings::cellSize << '\n';
 			}
 
 			//Mouse Released
@@ -121,11 +152,12 @@ int main()
 			board.setCell(mPos, false, true);
 		} 
 
-
 		board.update();
 
 		//RENDERING
 		window.clear();
+
+		window.setView(view);
 
 		board.drawCellsVertices();
 
