@@ -8,7 +8,7 @@
 int main()
 {
 	sf::RenderWindow window(sf::VideoMode({ Settings::WINDOW_SIZE, Settings::WINDOW_SIZE }), "Game Of Life");
-	sf::View view{ {Settings::cellAmount * Settings::cellSize / 2, Settings::cellAmount * Settings::cellSize / 2  }, {Settings::cellSize * Settings::cellAmount, Settings::cellSize * Settings::cellAmount} };
+	sf::View view{ {Settings::gridSize / 2, Settings::gridSize / 2  }, {Settings::gridSize, Settings::gridSize} };
 
 	Board board{ window };
 
@@ -16,6 +16,10 @@ int main()
 
 	bool isLeftMouseHeld{ false };
 	bool isRightMouseHeld{ false };
+	bool isUpHeld{ false };
+	bool isDownHeld{ false };
+	bool isRightHeld{ false };
+	bool isLeftHeld{ false };
 	sf::Vector2i mPos;
 	
 
@@ -61,19 +65,37 @@ int main()
 				else if (scrollDelta < 0)
 					view.zoom(1.1f);
 
-				if (view.getSize().x > Settings::cellAmount * Settings::cellSize)
+				//zoom restraints
+				if (view.getSize().x > Settings::gridSize)
 				{
-					view.setSize({ Settings::cellAmount * Settings::cellSize, Settings::cellAmount * Settings::cellSize });
+					view.setSize({ Settings::gridSize, Settings::gridSize });
 				}
 
 				if (view.getSize().x < Settings::cellSize * 2)
 				{
 					view.setSize({ Settings::cellSize * 2, Settings::cellSize * 2 });
 				}
+				
+				float newPosX = view.getCenter().x;
+				float newPosY = view.getCenter().y;
+				float rightSideView = view.getCenter().x + view.getSize().x / 2;
+				float leftSideView = view.getCenter().x - view.getSize().x / 2;
+				float bottomSideView = view.getCenter().y + view.getSize().y / 2;
+				float topSideView = view.getCenter().y - view.getSize().y / 2;
 
-				//view.setCenter(window.mapPixelToCoords(mouseScrolled->position));
+				if (rightSideView > Settings::gridSize)
+					newPosX -= rightSideView - Settings::gridSize;
 
-				std::cout << "View: " << view.getSize().x << '\n';
+				if (leftSideView < 0)
+					newPosX -= leftSideView;
+
+				if (bottomSideView > Settings::gridSize)
+					newPosY -= bottomSideView - Settings::gridSize;
+
+				if (topSideView < 0)
+					newPosY -= topSideView;
+
+				view.setCenter({ newPosX, newPosY });
 
 				window.setView(view);
 			}
@@ -92,17 +114,8 @@ int main()
 				if (ImGui::GetIO().WantCaptureMouse)
 					continue;
 				
-
-
 				if (mouseButtonPressed->button == sf::Mouse::Button::Left)
-				{
-					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LControl))
-					{
-						
-					}
-					else
 					isLeftMouseHeld = true;
-				}
 
 				if (mouseButtonPressed->button == sf::Mouse::Button::Right)
 					isRightMouseHeld = true;
@@ -139,10 +152,61 @@ int main()
 
 				if (keyPressed->scancode == sf::Keyboard::Scan::G)
 					board.toggleGrid();
+
+				if (keyPressed->scancode == sf::Keyboard::Scan::H)
+				{
+					view.setCenter({ Settings::gridSize / 2, Settings::gridSize / 2 });
+					view.setSize({ Settings::gridSize, Settings::gridSize });
+				}
+
+				if (keyPressed->scancode == sf::Keyboard::Scan::W)
+					isUpHeld = true;
+
+				if (keyPressed->scancode == sf::Keyboard::Scan::A)
+					isLeftHeld = true;
+
+				if (keyPressed->scancode == sf::Keyboard::Scan::S)
+					isDownHeld = true;
+
+				if (keyPressed->scancode == sf::Keyboard::Scan::D)
+					isRightHeld = true;
+			}
+
+			if (const auto* keyReleased = event->getIf<sf::Event::KeyReleased>())
+			{
+				if (keyReleased->scancode == sf::Keyboard::Scan::W)
+					isUpHeld = false;
+
+				if (keyReleased->scancode == sf::Keyboard::Scan::A)
+					isLeftHeld = false;
+
+				if (keyReleased->scancode == sf::Keyboard::Scan::S)
+					isDownHeld = false;
+
+				if (keyReleased->scancode == sf::Keyboard::Scan::D)
+					isRightHeld = false;
 			}
 		}
 		
 		//UPDATE
+
+		if (isUpHeld && view.getCenter().y - (view.getSize().y / 2) > 0)
+		{
+			view.move({ 0,-5.f });
+		}
+		if (isDownHeld && view.getCenter().y + (view.getSize().y / 2) < Settings::gridSize)
+		{
+			view.move({ 0, 5.f });
+		}
+		if (isRightHeld && view.getCenter().x + (view.getSize().x / 2) < Settings::gridSize)
+		{
+			view.move({ 5.f, 0 });
+		}
+		if (isLeftHeld && view.getCenter().x - (view.getSize().x / 2) > 0)
+		{
+			view.move({ -5.f, 0 });
+		}
+
 		if (isLeftMouseHeld)
 		{
 			board.setCell(mPos, true, true);
@@ -150,7 +214,7 @@ int main()
 		else if (isRightMouseHeld)
 		{
 			board.setCell(mPos, false, true);
-		} 
+		}
 
 		board.update();
 
