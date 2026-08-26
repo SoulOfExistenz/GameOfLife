@@ -199,7 +199,7 @@ int main()
 			view.move({ -5.f, 0 });
 		}
 
-		auto mappedMouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+		auto mappedMouse = window.mapPixelToCoords(sf::Mouse::getPosition(window), view);
 		mPos = static_cast<sf::Vector2i>(mappedMouse) / Settings::cellSize;
 
 		if (isLeftMouseHeld)
