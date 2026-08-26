@@ -1,12 +1,12 @@
 #pragma once
-#include <SFML/graphics.hpp>
+#include <SFML/Graphics.hpp>
 
 namespace Settings
 {
 	constexpr int cellAmount{ 1000 };
 	constexpr int cellSize{ 20 };
-	constexpr int WINDOW_SIZE{ 800 };
-	constexpr int gridSize{ cellAmount * cellSize };
+	constexpr int WINDOW_SIZE{ 600 };
+	constexpr int gridSizeInPixels{ cellAmount * cellSize };
 
 	inline float tick{ 0.1f };
 	inline float randomizeAmount{ 0.25f };

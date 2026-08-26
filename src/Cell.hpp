@@ -1,6 +1,7 @@
 #pragma once
 #include "Settings.h"
 #include <SFML/Graphics.hpp>
+#include <cassert>
 
 class Cell
 {
@@ -10,7 +11,7 @@ private:
 	int m_neighbours{ 0 };
 
 	void addNeighbours() { m_neighbours++; }
-	void decreaseNeighbours() { if (m_neighbours > 0) { m_neighbours--; } }
+	void decreaseNeighbours() { assert(m_neighbours > 0); { m_neighbours--; } }
 
 public:
 	Cell(sf::Vector2f pos) : m_pos{pos}

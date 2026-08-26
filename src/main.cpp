@@ -8,7 +8,7 @@
 int main()
 {
 	sf::RenderWindow window(sf::VideoMode({ Settings::WINDOW_SIZE, Settings::WINDOW_SIZE }), "Game Of Life");
-	sf::View view{ {Settings::gridSize / 2, Settings::gridSize / 2  }, {Settings::gridSize, Settings::gridSize} };
+	sf::View view{ {Settings::gridSizeInPixels / 2, Settings::gridSizeInPixels / 2  }, {Settings::gridSizeInPixels, Settings::gridSizeInPixels} };
 
 	Board board{ window };
 
@@ -30,7 +30,6 @@ int main()
 
 	while (window.isOpen())
 	{
-
 		//IMGUI
 		ImGui::SFML::Update(window, clock.restart());
 		ImGui::Begin("Game of Life");
@@ -66,9 +65,9 @@ int main()
 					view.zoom(1.1f);
 
 				//zoom restraints
-				if (view.getSize().x > Settings::gridSize)
+				if (view.getSize().x > Settings::gridSizeInPixels)
 				{
-					view.setSize({ Settings::gridSize, Settings::gridSize });
+					view.setSize({ Settings::gridSizeInPixels, Settings::gridSizeInPixels });
 				}
 
 				if (view.getSize().x < Settings::cellSize * 2)
@@ -76,21 +75,22 @@ int main()
 					view.setSize({ Settings::cellSize * 2, Settings::cellSize * 2 });
 				}
 				
-				float newPosX = view.getCenter().x;
-				float newPosY = view.getCenter().y;
 				float rightSideView = view.getCenter().x + view.getSize().x / 2;
 				float leftSideView = view.getCenter().x - view.getSize().x / 2;
 				float bottomSideView = view.getCenter().y + view.getSize().y / 2;
 				float topSideView = view.getCenter().y - view.getSize().y / 2;
 
-				if (rightSideView > Settings::gridSize)
-					newPosX -= rightSideView - Settings::gridSize;
+				float newPosX = view.getCenter().x;
+				float newPosY = view.getCenter().y;
+
+				if (rightSideView > Settings::gridSizeInPixels)
+					newPosX -= rightSideView - Settings::gridSizeInPixels;
 
 				if (leftSideView < 0)
 					newPosX -= leftSideView;
 
-				if (bottomSideView > Settings::gridSize)
-					newPosY -= bottomSideView - Settings::gridSize;
+				if (bottomSideView > Settings::gridSizeInPixels)
+					newPosY -= bottomSideView - Settings::gridSizeInPixels;
 
 				if (topSideView < 0)
 					newPosY -= topSideView;
@@ -98,14 +98,6 @@ int main()
 				view.setCenter({ newPosX, newPosY });
 
 				window.setView(view);
-			}
-
-			//Mouse Moved
-			if (const auto* mouseMoved = event->getIf<sf::Event::MouseMoved>())
-			{
-				//mPos = mouseMoved->position / Settings::cellSize;
-				auto mappedMouse = window.mapPixelToCoords(mouseMoved->position);
-				mPos = static_cast<sf::Vector2i>(mappedMouse) / Settings::cellSize;
 			}
 			
 			//Mouse Pressed
@@ -155,8 +147,8 @@ int main()
 
 				if (keyPressed->scancode == sf::Keyboard::Scan::H)
 				{
-					view.setCenter({ Settings::gridSize / 2, Settings::gridSize / 2 });
-					view.setSize({ Settings::gridSize, Settings::gridSize });
+					view.setCenter({ Settings::gridSizeInPixels / 2, Settings::gridSizeInPixels / 2 });
+					view.setSize({ Settings::gridSizeInPixels, Settings::gridSizeInPixels });
 				}
 
 				if (keyPressed->scancode == sf::Keyboard::Scan::W)
@@ -194,11 +186,11 @@ int main()
 		{
 			view.move({ 0,-5.f });
 		}
-		if (isDownHeld && view.getCenter().y + (view.getSize().y / 2) < Settings::gridSize)
+		if (isDownHeld && view.getCenter().y + (view.getSize().y / 2) < Settings::gridSizeInPixels)
 		{
 			view.move({ 0, 5.f });
 		}
-		if (isRightHeld && view.getCenter().x + (view.getSize().x / 2) < Settings::gridSize)
+		if (isRightHeld && view.getCenter().x + (view.getSize().x / 2) < Settings::gridSizeInPixels)
 		{
 			view.move({ 5.f, 0 });
 		}
@@ -206,6 +198,9 @@ int main()
 		{
 			view.move({ -5.f, 0 });
 		}
+
+		auto mappedMouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+		mPos = static_cast<sf::Vector2i>(mappedMouse) / Settings::cellSize;
 
 		if (isLeftMouseHeld)
 		{

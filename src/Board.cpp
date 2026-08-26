@@ -13,6 +13,9 @@ Board::Board(sf::RenderWindow& window) : m_window(window), m_gridVertices(sf::Pr
 	float cellSize = Settings::cellSize;
 	float cellAmount = Settings::cellAmount;
 
+	m_boardA.reserve(static_cast<int>(cellAmount * cellAmount));
+	m_boardB.reserve(static_cast<int>(cellAmount * cellAmount));
+
 	//init grid
 	for (auto i{ 0 }; i < (cellAmount - 1); i++)
 	{
@@ -63,6 +66,7 @@ void Board::clear()
 			setCell(e.getGridPos(), false, true);
 		}
 	}
+
 	m_generationCount = 0;
 }
 
@@ -141,14 +145,14 @@ void Board::setCell(const sf::Vector2i gridPos, bool state, bool currentBoard)
 {
 	if (gridPos.x < 0 || gridPos.y < 0)
 		return;
-	if (gridPos.x > Settings::cellAmount || gridPos.y > Settings::cellAmount)
+	if (gridPos.x > Settings::cellAmount - 1 || gridPos.y > Settings::cellAmount - 1)
 		return;
 
 	//get index
 	auto index = gridToIndex(gridPos);
 	auto cellAmount = Settings::cellAmount;
 
-	if (index > std::size(m_boardA) - 1 || index < 0)
+	if (index > std::size(m_boardA) - 1)
 	{
 		std::cout << "setCell() index doesn't fit\n";
 		return;
@@ -157,14 +161,8 @@ void Board::setCell(const sf::Vector2i gridPos, bool state, bool currentBoard)
 	auto& board = (currentBoard ? m_currentBoard : m_nextBoard);
 	auto& cell = board->at(index);
 
-	if (cell.getState() == state)
-	{
-		//std::cout << "This is already set as you want it to be...\n";
-		return;
-	}
+	if (cell.getState() == state) { return; }
 
-	//std::cout << "Neighbours: " << cell.getNeighbours() << '\n';
-	//std::cout << "Index: " << index;
 	//effect cell
 	cell.setState(state);
 
