@@ -26,6 +26,7 @@ private:
 	sf::RenderWindow& m_window;
 
 	size_t gridToIndex(sf::Vector2i pos) { return (pos.y * Settings::cellAmount) + pos.x; }
+	sf::Vector2i indexToGridPos(int index) { return {index % Settings::cellAmount, index / Settings::cellAmount}; }
 
 	void nextGen();
 

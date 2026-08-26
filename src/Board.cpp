@@ -8,13 +8,11 @@
 #include <vector>
 #include <utility>
 
-Board::Board(sf::RenderWindow& window) : m_window(window), m_gridVertices(sf::PrimitiveType::Lines), m_cellVertices(sf::PrimitiveType::Triangles)
+Board::Board(sf::RenderWindow& window) : m_window(window), m_boardA(Settings::cellAmount * Settings::cellAmount), m_boardB(Settings::cellAmount * Settings::cellAmount)
+									   , m_gridVertices(sf::PrimitiveType::Lines), m_cellVertices(sf::PrimitiveType::Triangles)
 {
 	float cellSize = Settings::cellSize;
 	float cellAmount = Settings::cellAmount;
-
-	m_boardA.reserve(static_cast<int>(cellAmount * cellAmount));
-	m_boardB.reserve(static_cast<int>(cellAmount * cellAmount));
 
 	//init grid
 	for (auto i{ 0 }; i < (cellAmount - 1); i++)
@@ -28,23 +26,10 @@ Board::Board(sf::RenderWindow& window) : m_window(window), m_gridVertices(sf::Pr
 		m_gridVertices.append(sf::Vertex(sf::Vector2f{ (i + 1) * cellSize, cellAmount * cellSize }, color));
 	}
 
-	//Init board
-	for (float column{ 0 }; column < cellAmount; column++)
-	{
-		float yPos{ column * cellSize };
-
-		for (float row{ 0 }; row < cellAmount; row++)
-		{
-			float xPos{ row * cellSize };
-			m_boardA.emplace_back(sf::Vector2f{ xPos, yPos });
-			m_boardB.emplace_back(sf::Vector2f{ xPos, yPos });
-		}
-	}
-
-	//Init Cell Vertices
+	//Init Vertices
 	for (auto i{ 0 }; i < std::size(m_boardA); i++)
 	{
-		sf::Vector2f pos = static_cast<sf::Vector2f>(m_boardA[i].getPos());
+		sf::Vector2f pos = {static_cast<float>(i % Settings::cellAmount * Settings::cellSize), static_cast<float>(i / Settings::cellAmount * Settings::cellSize)};
 		auto color = Settings::deadColor;
 
 		m_cellVertices.append(sf::Vertex(sf::Vector2f{ pos.x, pos.y }, color)); // top left
@@ -59,11 +44,11 @@ Board::Board(sf::RenderWindow& window) : m_window(window), m_gridVertices(sf::Pr
 
 void Board::clear()
 {
-	for (auto& e : *m_currentBoard)
+	for (auto i{0}; i < std::size(m_boardA); i++)
 	{
-		if (e.getState())
+		if (m_currentBoard->at(i).getState())
 		{
-			setCell(e.getGridPos(), false, true);
+			setCell(indexToGridPos(i), false, true);
 		}
 	}
 
@@ -77,12 +62,13 @@ void Board::randomizeGrid()
 	{
 		do
 		{
-			const auto& cell = m_currentBoard->at(Random::get<size_t>(0, std::size(m_boardA) - 1));
+			const auto randomIndex{ Random::get<int>(0, std::size(m_boardA) - 1 )};
+			const auto& cell = m_currentBoard->at(randomIndex);
 
 			if (cell.getState())
 				continue;
 
-			setCell(cell.getGridPos(), true, true);
+			setCell(indexToGridPos(randomIndex), true, true);
 			break;
 
 		} while (true);
@@ -108,16 +94,17 @@ void Board::nextGen()
 	for (auto i{ 0 }; i < std::size(*m_currentBoard); i++)
 	{
 		auto& curCell = m_currentBoard->at(i);
+		auto gridPos = indexToGridPos(i);
 
 		//if cell is dead and has 3 live neighbours it becomes alive
 		if (!curCell.getState())
 		{
 			if (m_nextBoard->at(i).getState())
-				setCell(curCell.getGridPos(), false);
+				setCell(gridPos, false);
 
 			if (curCell.getNeighbours() == 3)
 			{
-				setCell(curCell.getGridPos(), true);
+				setCell(gridPos, true);
 				continue;
 			}
 		}
@@ -126,12 +113,12 @@ void Board::nextGen()
 		if (curCell.getState())
 		{
 			if (!m_nextBoard->at(i).getState())
-				setCell(curCell.getGridPos(), true);
+				setCell(gridPos, true);
 
 			//If cell has less than 2 or more than 3 neighbours it dies
 			if (curCell.getNeighbours() < 2 || curCell.getNeighbours() > 3)
 			{
-				setCell(curCell.getGridPos(), false);
+				setCell(gridPos, false);
 				continue;
 			}
 		}

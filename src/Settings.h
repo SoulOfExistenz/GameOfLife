@@ -3,7 +3,7 @@
 
 namespace Settings
 {
-	constexpr int cellAmount{ 1000 };
+	constexpr int cellAmount{ 200 };
 	constexpr int cellSize{ 20 };
 	constexpr int WINDOW_SIZE{ 600 };
 	constexpr int gridSizeInPixels{ cellAmount * cellSize };
