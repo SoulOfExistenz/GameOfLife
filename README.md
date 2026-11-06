@@ -1,5 +1,5 @@
 # Conway's Game of Life
-Implementation of Conway's Game of Life with c++ 23 and SFML 3.1 including ImGui.
+Conway's Game of Life with c++ 23, SFML 3.1 and ImGui.
 The project uses a 1D grid, double-buffered board, and draws the cells using vertices.
 
 ![Conway's Game Of Life Sun](Screenshots/sun.gif)
@@ -26,10 +26,9 @@ Clone the repository and configure/build it with CMake.
 - H: Reset view
 
 # About
-This was a learning project primarily focused on cellular automata, simulation logic,
-and rendering a large number of cells efficiently using vertices and triangles.
+This was a learning project on cellular automata, simulation logic.
 
-I also learned a lot about using sf::view, array/grid indexing and probably other things...
+I learned a lot about rendering a large number of cells efficiently using vertices and triangles, using sf::view, array/grid indexing and probably other things...
 It took me longer than I initially expected because I suck at maths.
 
-This is also the first project where I have seen tangible value out of optimization which was very cool.
+This is also the first project where I have been able to see value out of optimization which was very cool.
